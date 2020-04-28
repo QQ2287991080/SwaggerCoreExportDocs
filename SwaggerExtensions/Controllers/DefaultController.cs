@@ -25,7 +25,7 @@ namespace SwaggerExtensions.Controllers
     [SwaggerTag("默认控制器")]
     [Route("api/Default")]
     //[ApiController]
-    [Produces("application/json")]
+    //[Produces("application/json")]
     public class DefaultController : ControllerBase
     {
 
@@ -56,24 +56,31 @@ namespace SwaggerExtensions.Controllers
         [Route("Add")]
         [SwaggerResponse(200, "操作成功", typeof(Person))]
         //[ApiExplorerSettings(IgnoreApi = true)]
-        public FileResult Post(Person person)
+        public void Post([FromBody]Person person)
         {
             var xx = Request.PathBase;
-            var er = SwaggerVersion.v1.ToString();
-            var swagger = _provider.GetSwagger("v1");
-            var compoents = swagger.Components;
-            var tags = swagger.Tags;
-            var servers = swagger.Servers;
-            var security = swagger.SecurityRequirements;
-            var paths = swagger.Paths;
-            var xx2 = paths["/api/Default/Get"].Operations.Values;
-            var info = swagger.Info;
-            var ms = Word();
-            ms.Seek(0, SeekOrigin.Begin);
-            return File(ms, "application/msword", "测试");
+            //var er = SwaggerVersion.v1.ToString();
+            //var swagger = _provider.GetSwagger("v1");
+            //var compoents = swagger.Components;
+            //var tags = swagger.Tags;
+            //var servers = swagger.Servers;
+            //var security = swagger.SecurityRequirements;
+            //var paths = swagger.Paths;
+            //var xx2 = paths["/api/Default/Get"].Operations.Values;
+            //var info = swagger.Info;
+            //var ms = Word();
+            //ms.Seek(0, SeekOrigin.Begin);
+            //return File(ms, "application/msword", "测试");
         }
-
-        private MemoryStream Word()
+        [HttpPost]
+        [Route("Add2")]
+        [SwaggerResponse(200, "操作成功", typeof(Person))]
+        //[ApiExplorerSettings(IgnoreApi = true)]
+        public void Post2([FromBody]List<Person> person)
+        {
+            Console.WriteLine("");
+        }
+            private MemoryStream Word()
         {
             //保存地址
             string savePath = _env.WebRootPath + "/doc/" + $"{DateTime.Now.ToString("yyyyMMddHHmmss")}.doc";
@@ -203,7 +210,10 @@ namespace SwaggerExtensions.Controllers
             }
         }
 
+        
+        [SwaggerOperation(Summary ="测试")]
         [HttpPost]
+        //[Obsolete("不能使用")]
         [Route("Word2")]
         public MemoryStream Word2()
         {
@@ -327,19 +337,36 @@ namespace SwaggerExtensions.Controllers
         private List<ResponeParmeter> GetProperty(IDictionary<string, OpenApiSchema> properties)
         {
             List<ResponeParmeter> parmeters = new List<ResponeParmeter>();
-            List<(string, string, string)> tuple = new List<(string, string, string)>();
             foreach (var item in properties)
             {
+                ResponeParmeter respone = new ResponeParmeter();
                 //拿到对应的schema
                 var propertyValue = properties[item.Key];
-                ResponeParmeter respone = new ResponeParmeter()
+                //如果是model类型的属性
+                if (propertyValue.Items==null&&propertyValue.Reference!=null)//没有子集，用类型参考
                 {
-                    Description = propertyValue.Description,
-                    Name = item.Key,
-                    ParameterType = propertyValue.Type
+                    respone.IsReference = true;
+                    respone.SchemaId = propertyValue.Reference.Id;
+                }
+                if (propertyValue.Items != null&&propertyValue.Reference==null)
+                {
+                    if (propertyValue.Items.Reference!=null)
+                    {
+                        respone.IsReference = true;
+                        respone.SchemaId = propertyValue.Reference.Id;
+                    }
+                    else
+                    {
+                        respone.ParameterType = propertyValue.Items.Type;
+                    }
+                }
+                
+                {
+                    respone.Description = propertyValue.Description;//备注
+                    respone.Name = item.Key;//参数名
+                    
                 };
                 parmeters.Add(respone);
-                tuple.Add((item.Key, propertyValue.Type, propertyValue.Description));
             }
             return parmeters;
         }
@@ -361,5 +388,13 @@ namespace SwaggerExtensions.Controllers
         /// 多个姓名
         /// </summary>
         public List<string> Names { get; set; }
+        public Children  Children { get; set; }
+        public List<Children>  Childrens { get; set; }
+    }
+    public class Children
+    {
+        public int Age { get; set; }
+        public string Name { get; set; }
+        public Children Children2 { get; set; }
     }
 }

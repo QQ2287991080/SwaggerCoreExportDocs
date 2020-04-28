@@ -56,6 +56,18 @@ namespace SwaggerExtensions.Models
         /// 备注
         /// </summary>
         public string Description { get; set; }
+        /// <summary>
+        /// 是否可参照
+        /// </summary>
+        public bool IsReference { get; set; }
+        /// <summary>
+        /// 是否有子集
+        /// </summary>
+        public bool IsItems { get; set; }
+        /// <summary>
+        /// 参数架构id
+        /// </summary>
+        public string SchemaId { get; set; }
     }
 
     /// <summary>
